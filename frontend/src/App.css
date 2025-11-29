@@ -492,6 +492,36 @@
   color: var(--muted-strong);
 }
 
+.detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.primary-btn {
+  align-self: flex-start;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(229, 57, 53, 0.28);
+  transition:
+    transform 120ms ease,
+    box-shadow 140ms ease;
+}
+
+.primary-btn:hover {
+  transform: translateY(-1px);
+}
+
+.primary-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 18px rgba(229, 57, 53, 0.24);
+}
+
 .table-card {
   background: #fff;
   border-radius: 12px;

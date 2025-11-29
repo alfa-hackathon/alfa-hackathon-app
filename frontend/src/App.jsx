@@ -227,10 +227,10 @@ function App() {
                           <p className="profile-id">id {selected?.id ?? '—'}</p>
                         </section>
                         <section className="card detail-card">
-                          <h2>Информация по прогнозам</h2>
-                          <p className="muted">
-                            Добавь сюда данные прогноза, графики или карточки рекомендаций.
-                          </p>
+                          <h1>Информация по прогнозам:</h1>
+                          <button className="primary-btn" type="button">
+                            Запрос по этому пользователю
+                          </button>
                         </section>
                       </div>
                     </div>
