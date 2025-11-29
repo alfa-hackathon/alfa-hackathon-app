@@ -8,6 +8,7 @@ import com.opencsv.CSVReaderBuilder;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -22,7 +23,8 @@ import java.util.Map;
 public class ClientCsvLoader {
 
     private final ClientRepository clientRepository;
-    
+    private final ObjectMapper objectMapper;
+
     @PostConstruct
     public void load() throws Exception {
         if (clientRepository.count() > 0) {
@@ -77,6 +79,10 @@ public class ClientCsvLoader {
 
                     String ageStr = safeGet(row, idxAge);
                     if (ageStr != null && !ageStr.isBlank()) {
+                        ageStr = normalizeNumber(ageStr);
+                        if (ageStr.contains(".")) {
+                            ageStr = ageStr.substring(0, ageStr.indexOf('.'));
+                        }
                         e.setAge(Integer.parseInt(ageStr));
                     }
 
@@ -92,6 +98,7 @@ public class ClientCsvLoader {
 
                     String incomeValStr = safeGet(row, idxIncomeValue);
                     if (incomeValStr != null && !incomeValStr.isBlank()) {
+                        incomeValStr = normalizeNumber(incomeValStr);
                         try {
                             e.setIncomeValue(new BigDecimal(incomeValStr));
                         } catch (NumberFormatException ex) {
@@ -119,22 +126,26 @@ public class ClientCsvLoader {
                             continue;
                         }
 
-                        Object valueObj = val;
+                        val = val.trim();
+                        String norm = normalizeNumber(val);
+                        Object valueObj = norm;
+
                         try {
-                            if (val.matches("^-?\\d+(\\.\\d+)?$")) {
-                                if (val.contains(".")) {
-                                    valueObj = Double.parseDouble(val);
+                            if (norm.matches("^-?\\d+(\\.\\d+)?$")) {
+                                if (norm.contains(".")) {
+                                    valueObj = Double.parseDouble(norm);
                                 } else {
-                                    valueObj = Long.parseLong(val);
+                                    valueObj = Long.parseLong(norm);
                                 }
                             }
                         } catch (NumberFormatException ignore) {
                             valueObj = val;
                         }
-
                         features.put(col, valueObj);
                     }
-                    e.setFeatures(features);
+
+                    String featuresJson = objectMapper.writeValueAsString(features);
+                    e.setFeatures(featuresJson);
 
                     batch.add(e);
                 }
@@ -157,5 +168,13 @@ public class ClientCsvLoader {
         if (idx < 0 || idx >= row.length) return null;
         return row[idx];
     }
+
+    private String normalizeNumber(String s) {
+        if (s == null) return null;
+        s = s.trim();
+        s = s.replace(',', '.');
+        return s;
+    }
+
 }
 

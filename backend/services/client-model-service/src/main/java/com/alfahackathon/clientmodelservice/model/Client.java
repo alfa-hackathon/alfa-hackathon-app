@@ -29,7 +29,6 @@ public class Client {
     private BigDecimal incomeValue;
     private String incomeCategory;
 
-    @Column(columnDefinition = "jsonb")
-    @Convert(converter = JsonbConverter.class)
-    private Map<String, Object> features;
+    @Column(columnDefinition = "text")
+    private String features;
 }
