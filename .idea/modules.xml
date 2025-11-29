@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/alfa-hackathon.iml" filepath="$PROJECT_DIR$/.idea/alfa-hackathon.iml" />
-      <module fileurl="file://$PROJECT_DIR$/backend/services/client-model-service/client-model-service.iml" filepath="$PROJECT_DIR$/backend/services/client-model-service/client-model-service.iml" />
     </modules>
   </component>
 </project>
