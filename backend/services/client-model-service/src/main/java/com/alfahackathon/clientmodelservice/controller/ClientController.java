@@ -33,7 +33,7 @@ public class ClientController {
     @GetMapping("/clients")
     public List<ClientShortDto> listClients() {
         return clientRepository.findAll().stream()
-                .limit(200)
+                .limit(50) // чтобы не уронить фронт
                 .map(this::toShortDto)
                 .toList();
     }
