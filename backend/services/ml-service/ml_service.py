@@ -7,71 +7,62 @@ import pandas as pd
 
 app = FastAPI()
 
+
 class PredictRequest(BaseModel):
     features: Dict[str, Any]
 
+
 MODEL_PATH = "catboost_model.cbm"
 
-# Загружаем модель
 model = CatBoostClassifier()
 model.load_model(MODEL_PATH)
 
-# 1. Получаем список всех фичей в правильном порядке
 FEATURE_NAMES: List[str] = list(model.feature_names_)
 
-# 2. АВТОМАТИЧЕСКИ получаем индексы категориальных фичей и преобразуем их в имена
 cat_indices = model.get_cat_feature_indices()
 CAT_FEATURES = set([FEATURE_NAMES[i] for i in cat_indices])
 
 print(f"Detected categorical features: {CAT_FEATURES}")
 
-@app.post("/predict")
-def predict(request: PredictRequest):
+
+def build_row(features: Dict[str, Any]) -> Dict[str, Any]:
     row: Dict[str, Any] = {}
 
     for name in FEATURE_NAMES:
-        # Получаем значение, если его нет — ставим дефолт (0 для чисел, "MISSING" для строк)
-        # Но для надежности берем из request или None
-        val = request.features.get(name)
+        val = features.get(name)
 
-        # Логика обработки
         if name in CAT_FEATURES:
-            # Если это категория — приводим к строке
-            # Если пришел None, заменяем на пустую строку или специальный маркер,
-            # чтобы CatBoost не ругался
-            row[name] = str(val) if val is not None else ""
+            row[name] = "" if val is None else str(val)
         else:
-            # Если это число
             if val is None:
                 row[name] = 0.0
             else:
-                # Если пришла строка (например "6,0"), чистим её
                 if isinstance(val, str):
-                    val = val.replace(',', '.').strip()
-                    if val == "":
+                    v = val.replace(",", ".").strip()
+                    if v == "":
                         row[name] = 0.0
                     else:
                         try:
-                            row[name] = float(val)
+                            row[name] = float(v)
                         except ValueError:
-                            # Если пришло слово "Начальник" в числовую колонку (что странно, но бывает)
-                            # ставим 0, чтобы сервис не упал
                             row[name] = 0.0
                 else:
-                    # Уже число
                     row[name] = val
 
-    df = pd.DataFrame([row])
+    return row
 
-    # Выделяем категориальные колонки, которые есть в датафрейме
-    # (они должны быть там все, так как мы идем по FEATURE_NAMES)
+
+@app.post("/predict")
+def predict(request: PredictRequest):
+    row = build_row(request.features)
+    df = pd.DataFrame([row])
     pool = Pool(df, cat_features=list(CAT_FEATURES))
 
     if hasattr(model, "predict_proba"):
-        proba: List[List[float]] = model.predict_proba(pool)  # type: ignore
+        proba: List[List[float]] = model.predict_proba(pool)
         p1 = float(proba[0][1])
     else:
-        raw = float(model.predict(pool)[0])  # type: ignore
+        raw = float(model.predict(pool)[0])
         p1 = max(0.0, min(1.0, raw))
 
     decision = "APPROVE" if p1 >= 0.5 else "REJECT"
@@ -79,4 +70,30 @@ def predict(request: PredictRequest):
     return {
         "approvalProbability": p1,
         "decision": decision,
+    }
+
+
+@app.post("/shap")
+def shap(request: PredictRequest):
+    row = build_row(request.features)
+    df = pd.DataFrame([row])
+    pool = Pool(df, cat_features=list(CAT_FEATURES))
+
+    shap_matrix = model.get_feature_importance(
+        data=pool,
+        type="ShapValues",
+        prettified=False,
+    )
+    shap_row = shap_matrix[0]
+    shap_values_only = shap_row[:-1]
+    base_value = float(shap_row[-1])
+
+    shap_dict = {
+        name: float(val)
+        for name, val in zip(FEATURE_NAMES, shap_values_only)
+    }
+
+    return {
+        "baseValue": base_value,
+        "shapValues": shap_dict,
     }
