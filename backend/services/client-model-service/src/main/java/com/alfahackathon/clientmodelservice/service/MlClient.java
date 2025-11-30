@@ -28,7 +28,6 @@ public class MlClient {
     @SuppressWarnings("unchecked")
     public Map<String, Object> predict(Map<String, Object> features) {
         try {
-            // ОБЯЗАТЕЛЬНАЯ обёртка {"features": {...}}
             Map<String, Object> body = new HashMap<>();
             body.put("features", features);
 
