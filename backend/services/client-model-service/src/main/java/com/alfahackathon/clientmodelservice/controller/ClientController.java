@@ -9,6 +9,9 @@ import com.alfahackathon.clientmodelservice.repository.ClientRepository;
 import com.alfahackathon.clientmodelservice.service.MlClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -31,21 +34,23 @@ public class ClientController {
     }
 
     @GetMapping("/clients")
-    public List<ClientShortDto> listClients() {
-        return clientRepository.findAll().stream()
-                .limit(50) // чтобы не уронить фронт
-                .map(this::toShortDto)
-                .toList();
+    public Page<ClientShortDto> listClients(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        return clientRepository.findAll(pageable)
+                .map(this::toShortDto);
     }
 
     private ClientShortDto toShortDto(Client e) {
-        String agePart = e.getAge() != null ? e.getAge() + " лет" : "? лет";
-        String regionPart = e.getAdminarea() != null ? e.getAdminarea() : "";
-        String incomePart = Optional.ofNullable(e.getIncomeValue())
-                .map(BigDecimal::toPlainString)
-                .orElse("");
-        String display = e.getId() + " | " + agePart + " | " + regionPart + " | " + incomePart;
-        return new ClientShortDto(e.getId(), display);
+        return new ClientShortDto(
+                e.getId(),
+                e.getAge(),
+                e.getAdminarea(),
+                e.getIncomeValue()
+        );
     }
 
     @GetMapping("/client/{id}")

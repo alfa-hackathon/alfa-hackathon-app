@@ -1,6 +1,10 @@
 package com.alfahackathon.clientmodelservice.dto;
 
+import java.math.BigDecimal;
+
 public record ClientShortDto(
         Long id,
-        String displayName
+        Integer age,
+        String region,
+        BigDecimal income
 ) {}
