@@ -1,0 +1,4 @@
+### GET predict by client id
+@id = 123
+
+POST http://localhost:5001/api/client/{{id}}/predict
