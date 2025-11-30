@@ -88,4 +88,38 @@ public class ClientController {
 
         return ClientMapper.toClientWithScoreDto(e, prob, decision);
     }
+
+    @PostMapping("/client/{id}/shap")
+    public Map<String, Object> shap(@PathVariable Long id) throws IOException {
+        Client e = clientRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Client not found"
+                ));
+
+        Map<String, Object> features = buildFeatures(e);
+
+        return mlClient.shap(features);
+    }
+
+    private Map<String, Object> buildFeatures(Client e) throws IOException {
+        Map<String, Object> features = new HashMap<>();
+
+        features.put("age", e.getAge());
+        features.put("gender", e.getGender());
+        features.put("adminarea", e.getAdminarea());
+        features.put("incomeValue", e.getIncomeValue());
+        features.put("incomeValueCategory", e.getIncomeCategory());
+        features.put("city_smart_name", e.getCitySmartName());
+
+        String rawFeaturesJson = e.getFeatures();
+        if (rawFeaturesJson != null && !rawFeaturesJson.isBlank()) {
+            Map<String, Object> extra = objectMapper.readValue(
+                    rawFeaturesJson,
+                    new TypeReference<Map<String, Object>>() {}
+            );
+            features.putAll(extra);
+        }
+
+        return features;
+    }
 }
