@@ -1,0 +1,2 @@
+### GET all clients from csv
+GET http://localhost:4000/api/clients
