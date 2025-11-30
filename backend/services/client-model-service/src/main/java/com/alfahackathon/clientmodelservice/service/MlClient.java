@@ -17,18 +17,20 @@ public class MlClient {
 
     private final RestTemplate restTemplate;
     private final String predictUrl;
+    private final String shapUrl;
 
     public MlClient(
-            @Value("${ml.service.url:http://localhost:8000/predict}") String predictUrl
+            @Value("${ml.service.url:http://localhost:8000/predict}") String predictUrl,
+            @Value("${ml.service.shap-url:http://localhost:8080/shap}") String shapUrl
     ) {
         this.restTemplate = new RestTemplate();
         this.predictUrl = predictUrl;
+        this.shapUrl = shapUrl;
     }
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> predict(Map<String, Object> features) {
         try {
-            // ОБЯЗАТЕЛЬНАЯ обёртка {"features": {...}}
             Map<String, Object> body = new HashMap<>();
             body.put("features", features);
 
@@ -55,6 +57,32 @@ public class MlClient {
             throw new ResponseStatusException(
                     HttpStatus.BAD_GATEWAY,
                     "ML service call failed",
+                    ex
+            );
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> shap(Map<String, Object> features) {
+        try {
+            Map<String, Object> body = new HashMap<>();
+            body.put("features", features);
+
+            ResponseEntity<Map> response =
+                    restTemplate.postForEntity(shapUrl, body, Map.class);
+
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_GATEWAY,
+                        "ML SHAP service returned empty or non-2xx response"
+                );
+            }
+
+            return response.getBody();
+        } catch (RestClientException ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "ML SHAP service call failed",
                     ex
             );
         }

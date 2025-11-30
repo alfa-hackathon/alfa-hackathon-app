@@ -1,0 +1,4 @@
+### POST get shap of user by id
+@id = 186
+
+POST http://localhost:4000/api/client/{{id}}/shap

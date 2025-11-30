@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/alfa-hackathon.iml" filepath="$PROJECT_DIR$/.idea/alfa-hackathon.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/client-model-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/client-model-service.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/frontend.iml" filepath="$PROJECT_DIR$/frontend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/client-model-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/client-model-service.main.iml" />
     </modules>
   </component>
 </project>
